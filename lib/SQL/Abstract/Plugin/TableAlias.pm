@@ -101,10 +101,25 @@ sub _alias_select_array {
 		if ( $ref eq 'ARRAY' ) {
 			$i++; 
 			for (my $l = 0; $l < scalar @{$sel}; $l++) {
-				$columns{$sel->[$l]} = $map->[$i];
-				push @select, sprintf("%s.%s", $map->[$i], $sel->[$l]);
+				if (ref($sel->[$l]) || "" eq "HASH") {
+					for my $key ( keys %{ $sel->[$l] } ) {
+						$sel->[$l]{_valid_column($key, $map->[$i], {})} = delete $sel->[$l]{$key};
+						$columns{$key} = $map->[$i];
+					}
+					push @select, $sel->[$l];
+				} else {
+					$columns{$sel->[$l]} = $map->[$i];
+					push @select, sprintf("%s.%s", $map->[$i], $sel->[$l]);
+				}
 			}
 			$last_array = 1;
+		} elsif ( $ref eq 'HASH' ) {
+			$i++ if $i < 0 || $last_array && do { $last_array = 0; 1; };
+			for my $key ( keys %{ $sel } ) {
+				$sel->{_valid_column($key, $map->[$i], {})} = delete $sel->{$key};
+				$columns{$key} = $map->[$i];
+			}
+			push @select, $sel;
 		} elsif (! $ref) {
 			$i++ if $i < 0 || $last_array && do { $last_array = 0; 1; };
 			$columns{$sel} = $map->[$i];
@@ -277,7 +292,7 @@ produces:
 setting talias:
 
 	my ($stmt, @bind) = $sql->select({
-		talias => [n, i, f],
+		talias => [qw/n i f/],
 		select => [ qw/one two three/, [qw/four five/], [qw/six seven eight/] ],
 		from => [
 			"numbers",

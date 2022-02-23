@@ -6,7 +6,7 @@ use SQL::Abstract;
 my $sql = SQL::Abstract->new->plugin('+TableAlias');
 
 subtest 'hash_array_select_basic' => sub {
-	plan tests => 5;
+	plan tests => 7;
 	
 	select_test({
 		select => {
@@ -21,6 +21,17 @@ subtest 'hash_array_select_basic' => sub {
 
 	select_test({
 		select => {
+			select => [ { foo => { -as => 'bar' } }, { baz => { -as => 'zap' } } ],
+			from => [
+				"tickets",
+			],
+			group_by => [ 'a' ]
+		},
+		expected => q|SELECT tickets.foo AS bar, tickets.baz AS zap FROM tickets AS tickets GROUP BY tickets.a|,
+	});
+
+	select_test({
+		select => {
 			select => [ qw/a b c/, [qw/d/] ],
 			from => [
 				"tickets",
@@ -29,6 +40,18 @@ subtest 'hash_array_select_basic' => sub {
 			order_by => 'a'
 		},
 		expected => q|SELECT tickets.a, tickets.b, tickets.c, other.d FROM tickets AS tickets, other AS other ORDER BY tickets.a|,
+	});
+
+	select_test({
+		select => {
+			select => [ qw/a b c/, [ { baz => { -as => 'zap' } } ] ],
+			from => [
+				"tickets",
+				"other"
+			],
+			order_by => 'a'
+		},
+		expected => q|SELECT tickets.a, tickets.b, tickets.c, other.baz AS zap FROM tickets AS tickets, other AS other ORDER BY tickets.a|,
 	});
 
 
