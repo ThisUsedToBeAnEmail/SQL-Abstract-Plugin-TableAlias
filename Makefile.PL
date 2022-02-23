@@ -2,6 +2,7 @@ use 5.006;
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
+use Module::Metadata;
 
 my %WriteMakefileArgs = (
     NAME             => 'SQL::Abstract::Plugin::TableAlias',
@@ -22,6 +23,21 @@ my %WriteMakefileArgs = (
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'SQL-Abstract-Plugin-TableAlias-*' },
+    META_MERGE => {
+        'meta-spec' => { version => 2 },
+        dynamic_config => 0,
+        resources => {
+            repository => {
+                type => 'git',
+                url  => 'https://github.com/ThisUsedToBeAnEmail/SQL-Abstract-Plugin-TableAlias.git',
+                web  => 'https://github.com/ThisUsedToBeAnEmail/SQL-Abstract-Plugin-TableAlias',
+            },
+        },
+    },
+    META_ADD => {
+        provides => Module::Metadata->provides(version => '2', dir => 'lib'),
+    }
+
 );
 
 # Compatibility with old versions of ExtUtils::MakeMaker
